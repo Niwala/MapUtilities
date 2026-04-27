@@ -1,5 +1,8 @@
 {
   "name": "com.heaj.sam.map-utilities",
+  "author": {
+    "name": "Jemine Samuel"
+  },
   "version": "0.0.1",
   "displayName": "Map Utilities",
   "description": "Project as part of the curriculum at the Haute Ecole Albert Jacquard, video game section. Set of tools for modifying a 2D map using enum cells.",
