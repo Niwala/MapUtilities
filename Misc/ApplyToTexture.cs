@@ -66,6 +66,29 @@ namespace Heaj.Sam.MapUtilities
         }
 
         /// <summary>
+        /// Applies a random color by type to the texture.<br/>
+        /// The texture cannot be null.
+        /// </summary>
+        public static void ApplyToTexture(FloodFillData floodFill, Texture2D texture)
+        {
+            int width = floodFill.ids.GetLength(0);
+            int height = floodFill.ids.GetLength(1);
+            EnsureTextureSize(width, height, texture);
+
+            //Fill texture
+            Color[] c = new Color[width * height];
+            for (int y = 0; y < height; y++)
+            {
+                for (int x = 0; x < width; x++)
+                {
+                    c[x + y * width] = ColorFromIndex(floodFill[x, y]);
+                }
+            }
+            texture.SetPixels(c);
+            texture.Apply();
+        }
+
+        /// <summary>
         /// Applies a given color by type to the texture.<br/>
         /// The texture cannot be null.
         /// </summary>

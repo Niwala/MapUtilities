@@ -12,16 +12,16 @@ namespace Heaj.Sam.MapUtilities
     {
         private static T EmptyValue => default;
 
-        //TODO : Add Kruskal's algorithm & border cleaning
+        //TODO : Add Kruskal's algorithm
 
 
-        public static List<IslandConnection> ComputeIslandConnections(T[,] types, FloodFillData ids)
+        public static List<IslandConnection> ComputeIslandConnections(T[,] map, FloodFillData ids)
         {
-            int width = types.GetLength(0);
-            int height = types.GetLength(1);
+            int width = map.GetLength(0);
+            int height = map.GetLength(1);
 
             //Run JFA
-            JumpFloodingData data = JumpFlood(types, ids);
+            JumpFloodingData data = JumpFlood(map, ids);
 
             var connections = new Dictionary<int2, IslandConnection>();
 
@@ -123,28 +123,6 @@ namespace Heaj.Sam.MapUtilities
                     map[cell.x, cell.y] = map[coords.x, coords.y];
                 }
             }
-        }
-
-
-
-        public struct IslandDistances
-        {
-            public int idA;
-            public int2 cellA;
-            public float distanceA;
-
-            public int idB;
-            public int2 cellB;
-            public float distanceB;
-        }
-
-        public struct IslandConnection
-        {
-            public int2 positionA;
-            public int idA;
-            public int2 positionB;
-            public int idB;
-            public float distance;
         }
     }
 }

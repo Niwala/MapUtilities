@@ -8,20 +8,49 @@ namespace Heaj.Sam.MapUtilities
 {
     public static partial class MapUtility<T>
     {
-        public static bool DrawPath(T[,] map, int2 start, int2 end, T drawType, bool supportDiagonals, params T[] walkableTypes)
+        public static bool DrawPath(T[,] map, int2 start, int2 end, T drawType, DrawMode drawMode, bool supportDiagonals, params T[] walkableTypes)
         {
-            return DrawPath(map, start, end, drawType, supportDiagonals, false, walkableTypes);
+            return DrawPath(map, start, end, drawType, drawMode, supportDiagonals, false, walkableTypes);
         }
 
-        public static bool DrawPath(T[,] map, int2 start, int2 end, T drawType, bool supportDiagonals, bool invertWalkables, params T[] walkableTypes)
+        public static bool DrawPath(T[,] map, int2 start, int2 end, T drawType, DrawMode drawMode, bool supportDiagonals, bool invertWalkables, params T[] walkableTypes)
         {
             int2 lastCell = start;
             foreach (var item in GetPath(map, start, end, supportDiagonals, invertWalkables, walkableTypes))
             {
-                map[item.x, item.y] = drawType;
+                Draw(map, item, drawType, drawMode);
                 lastCell = item;
             }
             return math.all(lastCell == end);
+        }
+
+        public static bool DrawPath(T[,] map, int2 start, int2 end, T drawType, DrawMode drawMode, bool supportDiagonals, float defaultCost, params float[] typeCosts)
+        {
+            int2 lastCell = start;
+            foreach (var item in GetPath(map, start, end, supportDiagonals, defaultCost, typeCosts))
+            {
+                Draw(map, item, drawType, drawMode);
+                lastCell = item;
+            }
+            return math.all(lastCell == end);
+        }
+
+        private static void Draw(T[,] map, int2 coord, T drawType, DrawMode drawMode)
+        {
+            switch (drawMode)
+            {
+                case DrawMode.Everything:
+                    map[coord.x, coord.y] = drawType;
+                    break;
+                case DrawMode.DrawOnEmptyOnly:
+                    if (map[coord.x, coord.y].Equals(EmptyValue))
+                        map[coord.x, coord.y] = drawType;
+                    break;
+                case DrawMode.DrawOnOccupiedOnly:
+                    if (!map[coord.x, coord.y].Equals(EmptyValue))
+                        map[coord.x, coord.y] = drawType;
+                    break;
+            }
         }
 
         public static IEnumerable<int2> GetPath(T[,] map, int2 start, int2 end, bool supportDiagonals, params T[] walkableTypes)
@@ -97,6 +126,94 @@ namespace Heaj.Sam.MapUtilities
 
                     var neighbor = new int2(nx, ny);
                     float tentativeG = currentG + moveCost[d];
+
+                    if (tentativeG < gScore.GetValueOrDefault(neighbor, float.MaxValue))
+                    {
+                        cameFrom[neighbor] = current;
+                        gScore[neighbor] = tentativeG;
+                        float f = tentativeG + Heuristic(neighbor, end);
+                        fScore[neighbor] = f;
+                        openSet.Add((f, neighbor));
+                    }
+                }
+            }
+            //No path found
+        }
+
+        public static IEnumerable<int2> GetPath(T[,] map, int2 start, int2 end, bool supportDiagonals, float defaultCost, params float[] typeCosts)
+        {
+            int rows = map.GetLength(0);
+            int cols = map.GetLength(1);
+            int neighCount = supportDiagonals ? 8 : 4;
+
+            //build cost lookup from enum values
+            var values = (T[])System.Enum.GetValues(typeof(T));
+            var costMap = new Dictionary<T, float>();
+            for (int i = 0; i < values.Length; i++)
+                costMap[values[i]] = (i < typeCosts.Length) ? typeCosts[i] : defaultCost;
+
+            float GetCost(int x, int y) => costMap[map[x, y]];
+            bool InBounds(int x, int y) => x >= 0 && y >= 0 && x < rows && y < cols;
+            bool IsWalkable(int x, int y) => InBounds(x, y) && GetCost(x, y) > 0f;
+
+            if (!IsWalkable(start.x, start.y) || !IsWalkable(end.x, end.y))
+                yield break;
+
+            //A* structures
+            var gScore = new Dictionary<int2, float>();
+            var fScore = new Dictionary<int2, float>();
+            var cameFrom = new Dictionary<int2, int2>();
+            var openSet = new SortedSet<(float f, int2 pos)>(Comparer<(float, int2)>.Create((a, b) =>
+            {
+                int cmp = a.Item1.CompareTo(b.Item1);
+                if (cmp != 0)
+                    return cmp;
+
+                cmp = a.Item2.x.CompareTo(b.Item2.x);
+                return cmp != 0 ? cmp : a.Item2.y.CompareTo(b.Item2.y);
+            }));
+
+            gScore[start] = 0f;
+            fScore[start] = Heuristic(start, end);
+            openSet.Add((fScore[start], start));
+
+            int[] dx = { -1, 1, 0, 0, -1, -1, 1, 1 };
+            int[] dy = { 0, 0, -1, 1, -1, 1, -1, 1 };
+            float[] moveCost = { 1f, 1f, 1f, 1f, 1.414f, 1.414f, 1.414f, 1.414f };
+
+            while (openSet.Count > 0)
+            {
+                var (_, current) = openSet.Min;
+                openSet.Remove(openSet.Min);
+
+                if (current.Equals(end))
+                {
+                    foreach (int2 cell in ReconstructPath(cameFrom, current))
+                        yield return cell;
+                    yield break;
+                }
+
+                float currentG = gScore.GetValueOrDefault(current, float.MaxValue);
+
+                for (int d = 0; d < neighCount; d++)
+                {
+                    int nx = current.x + dx[d];
+                    int ny = current.y + dy[d];
+
+                    if (!IsWalkable(nx, ny))
+                        continue;
+
+                    //Block diagonal movement if both adjacent cardinals are blocked
+                    if (supportDiagonals && d >= 4)
+                    {
+                        if (!IsWalkable(current.x + dx[d], current.y) &&
+                            !IsWalkable(current.x, current.y + dy[d]))
+                            continue;
+                    }
+
+                    var neighbor = new int2(nx, ny);
+                    //Tile cost is factored into movement cost
+                    float tentativeG = currentG + moveCost[d] * GetCost(nx, ny);
 
                     if (tentativeG < gScore.GetValueOrDefault(neighbor, float.MaxValue))
                     {

@@ -6,10 +6,10 @@ namespace Heaj.Sam.MapUtilities
 {
     public static partial class MapUtility<T>
     {
-        public static FloodFillData FloodFill(T[,] types, bool supportDiagonals, T emptyValue = default)
+        public static FloodFillData FloodFill(T[,] map, bool supportDiagonals, T emptyValue = default)
         {
-            int width = types.GetLength(0);
-            int height = types.GetLength(1);
+            int width = map.GetLength(0);
+            int height = map.GetLength(1);
 
             FloodFillData data = new FloodFillData(width, height);
 
@@ -27,7 +27,7 @@ namespace Heaj.Sam.MapUtilities
                 for (int y = 0; y < height; y++)
                 {
                     //Skip void or already visited
-                    if (types[x, y].Equals(EmptyValue) || data[x, y] != -1)
+                    if (map[x, y].Equals(EmptyValue) || data[x, y] != -1)
                         continue;
 
                     //Start new island
@@ -68,7 +68,7 @@ namespace Heaj.Sam.MapUtilities
                     return;
 
                 //Skip void or visited
-                if (types[x, y].Equals(EmptyValue) || data[x, y] != -1)
+                if (map[x, y].Equals(EmptyValue) || data[x, y] != -1)
                     return;
 
                 data[x, y] = currentId;

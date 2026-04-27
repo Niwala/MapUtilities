@@ -11,8 +11,7 @@ namespace Heaj.Sam.MapUtilities
         /// <summary>
         /// Provides information about the island, such as the number of cells and its bounding box
         /// </summary>
-        /// <param name="ids">Flood fill</param>
-        public static List<IslandData> GetIslandData(T[,] map, int[,] ids)
+        public static List<IslandData> GetIslandData(T[,] map, FloodFillData floodFill)
         {
             int width = map.GetLength(0);
             int height = map.GetLength(1);
@@ -23,7 +22,7 @@ namespace Heaj.Sam.MapUtilities
             {
                 for (int x = 0; x < width; x++)
                 {
-                    int id = ids[x, y];
+                    int id = floodFill[x, y];
 
                     if (!data.ContainsKey(id))
                     {
@@ -49,42 +48,6 @@ namespace Heaj.Sam.MapUtilities
                 islands.Add(island);
             }
             return islands;
-        }
-
-        public struct IslandData
-        {
-            public int islandID;
-            public int cellCount;
-
-            public int2 boundsMin;
-            public int2 boundsMax;
-            public float2 boundsCenter;
-            public int2 boundsSize;
-
-            public float2 weightedCenter;
-            public int2 oneCell;
-
-            public IslandData(int islandID, int2 firstCell)
-            {
-                this.islandID = islandID;
-
-                boundsMin = firstCell;
-                boundsMax = firstCell;
-                cellCount = 1;
-
-                boundsSize = default;
-                boundsCenter = default;
-                weightedCenter = default;
-                oneCell = firstCell;
-            }
-
-            public void Add(int2 cell)
-            {
-                boundsMin = math.min(boundsMin, cell);
-                boundsMax = math.max(boundsMax, cell);
-                weightedCenter += cell;
-                cellCount++;
-            }
         }
     }
 }
