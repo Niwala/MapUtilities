@@ -6,6 +6,6 @@
   "unity": "6000.3",
   "documentationUrl": "https://www.notion.so/samtechart/Map-Utilities-32e5d96b946d80238e7ae154cfccde0f",
   "dependencies": {
-    "com.unity.math": "1.0.0"
+    "com.unity.mathematics": "1.3.3"
   }
 }
