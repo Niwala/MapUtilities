@@ -8,10 +8,14 @@ namespace Heaj.Sam.MapUtilities
 {
     public static partial class MapUtility<T>
     {
-        public static List<(int2 a, int2 b)> TriangulateEdges(List<int2> inputPoints)
+        public static List<(int2 a, int2 b)> TriangulateLines(List<int2> inputPoints)
         {
             var edges = new List<(int2 a, int2 b)>();
-            if (inputPoints == null || inputPoints.Count < 3) return edges;
+            if (inputPoints == null || inputPoints.Count < 2) 
+                return edges;
+
+            if (inputPoints.Count == 2)
+                return new List<(int2 a, int2 b)> { (inputPoints[0], inputPoints[1]) };
 
             var points = ToFloat2List(inputPoints);
             var triangles = Bowyer_Watson(points);

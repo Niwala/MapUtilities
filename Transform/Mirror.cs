@@ -1,5 +1,7 @@
 using Unity.Mathematics;
 
+using UnityEngine;
+
 namespace Heaj.Sam.MapUtilities
 {
     public static partial class MapUtility<T>
@@ -48,13 +50,14 @@ namespace Heaj.Sam.MapUtilities
         {
             int width = map.GetLength(0);
             int height = map.GetLength(1);
+            int half = width / 2;
+
             U[,] copy = Copy(map);
 
             for (int y = 0; y < height; y++)
             {
                 for (int x = 0; x < width; x++)
                 {
-                    int half = width / 2;
                     int2 sourceCoord = new int2(width - (math.abs(x - half) + half), y);
                     if (sourceCoord.x < 0 || sourceCoord.x >= width)
                         map[x, y] = default;
@@ -68,13 +71,14 @@ namespace Heaj.Sam.MapUtilities
         {
             int width = map.GetLength(0);
             int height = map.GetLength(1);
+            int half = height / 2;
+
             U[,] copy = Copy(map);
 
             for (int y = 0; y < height; y++)
             {
                 for (int x = 0; x < width; x++)
                 {
-                    int half = height / 2;
                     int2 sourceCoord = new int2(x, height - (math.abs(y - half) + half));
                     if (sourceCoord.y < 0 || sourceCoord.y >= height)
                         map[x, y] = default;
@@ -88,14 +92,16 @@ namespace Heaj.Sam.MapUtilities
         {
             int width = map.GetLength(0);
             int height = map.GetLength(1);
+            int halfWidth = width / 2;
+            int halfHeight = height / 2;
+
             U[,] copy = Copy(map);
 
             for (int y = 0; y < height; y++)
             {
                 for (int x = 0; x < width; x++)
                 {
-                    int half = height / 2;
-                    int2 sourceCoord = new int2(width - (math.abs(x - half) + half), height - (math.abs(y - half) + half));
+                    int2 sourceCoord = new int2(width - (math.abs(x - halfWidth) + halfWidth), height - (math.abs(y - halfHeight) + halfHeight));
                     if (sourceCoord.y < 0 || sourceCoord.y >= height || sourceCoord.y < 0 || sourceCoord.y >= height)
                         map[x, y] = default;
                     else
